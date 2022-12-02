@@ -17,9 +17,14 @@ library(hrbrthemes)
 ```{r}
 planets <- readr::read_csv("data/planets.csv")
 planets
+
+#temp <- readr::read_csv("https://data.world/markmarkoh/kepler-confirmed-planets/workspace/file?filename=planets.csv")
+#temp Tried reading csv directly from url but this returns 
+
 ```
 
 ```{r}
+# This plot gets the planets with shortest year !
 planets |>
   arrange(pl_orbper)|>
   slice(1:30)|>
@@ -29,7 +34,11 @@ planets |>
   geom_point(size=5)+
   scale_fill_ipsum() +
   theme_ft_rc(14)
+```
 
+
+
+```{r}
 #Show the temperatures of planets with shortest year
 planets |>
   arrange(pl_orbper)|>
@@ -38,4 +47,17 @@ planets |>
   aes(y=pl_hostname , x=st_teff-273.15 , colour=pl_discmethod)+
   labs(x = "Temperature (C)", y = "hostname")+
   geom_point()
+
+
+# This plot gets the planets with the longest year !
+planets |>
+  arrange(desc(pl_orbper))|>
+  slice(1:30) |>
+  ggplot()+
+  aes(x=pl_orbper,y=pl_hostname , colour=pl_discmethod)+
+  labs(y = "Hostname", x = "Orbital Period (Earth Days)")+
+  geom_point() -> resulting_plot
+
+library(scales)
+resulting_plot + scale_x_continuous(labels = label_comma(),trans = 'log10')
 ```
