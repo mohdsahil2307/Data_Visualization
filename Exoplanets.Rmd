@@ -19,7 +19,7 @@ planets <- readr::read_csv("data/planets.csv")
 planets
 
 #temp <- readr::read_csv("https://data.world/markmarkoh/kepler-confirmed-planets/workspace/file?filename=planets.csv")
-#temp Tried reading csv directly from url but this returns 
+#temp Tried reading csv directly from url but this returns only 7 records, Hence I use the downloaded file directly.
 
 ```
 
