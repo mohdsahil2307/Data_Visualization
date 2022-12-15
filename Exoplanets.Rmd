@@ -1,12 +1,13 @@
 ---
 title: "Kepler Dataset Exploration"
 author: "Sahil Mohammad"
-date: "2022-11-25"
-output: 
-html_document:
-  fig_caption: yes
----
+date: "16-12-2022"
+output:
+  html_document:
+        theme: darkly 
+        fig_caption: yes
 
+---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 library(tidyverse)
@@ -27,81 +28,108 @@ planets <- readr::read_csv("data/planets.csv")
 
 ```
 
+```{css, echo=FALSE}
+p.caption {
+  font-size: 10px;
+}
 
-```{r echo=FALSE, out.width = "100%", out.width = "100%", fig.cap = "Kepler Space Telescope"}
-knitr::include_graphics("data/Kepler_mission.jpg")
+p.explanation {
+background-color: #DBDBDB;
+padding: 10px;
+border: 1px solid black;
+margin-left: 25px;
+border-radius: 5px;
+font-style: italic;
+background-image: url("data/stars.jpg");
+width = 100%;
+}
 ```
 
+```{r echo=FALSE, out.width = "100%", out.width = "100%", fig.cap = "The Kepler Space Telescope | Image source : NASA"}
+knitr::include_graphics("data/Kepler_mission.jpg")
+```
+For hundreds of years, humans thought if there are other planets apart from the ones in our solar system. We do see stars at night but we did not know if there are other planets around other stars! Thus, on March 6th 2009, the Kepler Space telescope was launched in search of Planets and potential life. The illustrations below explore the confirmed exo-planets that were found. It is intriguing to see how far Kepler was able to see in space.
 
 
-```{r fig.height=10 , fig.width=30}
+```{r , fig.width= 15, fig.height=10,echo=FALSE}
 # This plot gets the planets with shortest year !
 
 planets |>
   arrange(pl_orbper)|>
   slice(1:30)|>
   ggplot()+
-  aes(x=pl_orbper*24,y=pl_hostname , colour=pl_discmethod)+
+  aes(x=pl_orbper*24,y = reorder(pl_hostname, pl_orbper*24), colour=pl_discmethod , group=pl_discmethod)+
   labs(y = "Hostname", x = "Orbital Period (Earth Hours)")+
   geom_point(size=4)+
+  geom_line()+
   scale_fill_ipsum() +
   theme_ft_rc(14) +
   theme(axis.title.x = element_text(size = 20, hjust = 0.5),axis.title.y = element_text(size = 20, hjust = 0.5)) +
-  scale_x_continuous(labels = label_comma(),trans = 'log10')->plot1
-
-plot1.animation = plot1 + 
-transition_time(pl_orbper) + shadow_mark()
-#plot1.animation
-animate(plot1.animation,width =700,fps=25, end_pause = 50)
-
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10))+
+  scale_color_discrete(name="Discovery Method")
 
 ```
+<br>  
+<p class="explanation">
+The above plot shows 30 planets with the shortest Orbital Period. Orbital Period is nothing but the time taken by the planet to make a complete revolution around it's star. In other words, the plot shows how long a year is on those planets compared to Earth. The most interesting result is about the planet "PSR J1719-1438". There, a year lasts slightly more than 2 Earth hours. On further investigation, I found that the planet is orbiting a neutron star and is completely made of Diamonds 💎 
+</p>
 
-```{r}
 
+
+```{r , fig.width=15, fig.height=10}
 planets |>
-  arrange(pl_orbper)|>
-  slice(1:30)|>
-  group_by(pl_discmethod)|>
   ggplot()+
-  aes(x=pl_orbper*24,y=pl_hostname)+
-  labs(y = "Hostname", x = "Orbital Period (Earth Hours)")+
-  geom_point(size=3)+
+  aes(x= pl_orbper , y = pl_bmassj, size = st_teff, colour = pl_discmethod)+ #size is based on the temperature of the planet
+  labs(y = "Mass (Jupiter Mass)", x = "Orbital Period (Earth Days)")+
+  geom_point(alpha = 0.7 ,show.legend = FALSE)+
   scale_fill_ipsum() +
-  theme_ft_rc(14)->plot2
-plot2
+  theme_ft_rc(14) +
+  scale_fill_viridis_d()+
+  facet_wrap(~pl_discmethod,scales='free')+
+  theme(axis.title.x = element_text(size = 15 , hjust = 0.5),axis.title.y = element_text(size = 15,hjust=0.5))+
+  scale_y_continuous(labels = label_comma(),trans = 'log10')+
+  scale_x_continuous(labels = label_comma(),trans = 'log10')
+```
 
 
-#plot2.animation = plot2 + 
-#  transition_time(pl_orbper*24)
-#plot2.animation
-#animate(plot1.animation , fps = 120, duration = 10)
-
-
+```{r , fig.width=15}
 planets |>
   ggplot()+
-  aes(x= st_teff , y = st_dist, color = pl_discmethod)+
-  labs(y = "Distance", x = "Temperature")+
-  geom_point()+
-  scale_y_continuous(labels = label_comma(),trans = 'log10')
-
-planets |>
-  ggplot()+
-  aes(x= pl_orbper*24 , y = pl_bmassj, color = pl_discmethod)+
-  labs(y = "Mass", x = "Period")+
-  geom_point()+
-  scale_color_viridis_d() +
+  aes(x= pl_orbper , y = pl_bmassj, size = st_teff, colour = pl_discmethod)+ #size is based on the temperature of the planet
+  labs(y = "Mass", x = "Orbital Period (Earth Days)")+
+  geom_point(alpha = 0.7)+
+  scale_fill_ipsum() +
+  theme_ft_rc(14) +
   scale_y_continuous(labels = label_comma(),trans = 'log10')+
   scale_x_continuous(labels = label_comma(),trans = 'log10') -> plot_test
 
-test_animation = plot_test + transition_time(disc_year)
-  
-animate(test_animation)
+test_animation = plot_test + transition_time(disc_year) +shadow_mark()
+
+animate(test_animation,width =700,fps=10)
 
 
 
 
 ```
+
+```{r , fig.height=10, fig.width=15}
+planets |>
+  arrange(desc(st_dist))|>
+  slice(1:40)|>
+  group_by(pl_discmethod)|>
+  ggplot()+
+  aes(y = reorder(pl_hostname, -st_dist), x= st_dist*3.26156 , fill=pl_discmethod)+
+  xlim(0,27800)+
+  labs(x = "Distance (Light Years)", y = "Star Name")+
+  geom_bar(stat = "identity")+
+  geom_text(aes(label=ceiling(st_dist*3.26156))  ,hjust = 1, color='black')+ #round of to the ceil value
+  scale_fill_discrete(name = "Discovery Method")
+
+
+
+```
+
+
 
 ```{r}
 #Show the temperatures of planets with shortest year
@@ -122,6 +150,7 @@ planets |>
   aes(x=pl_orbper,y=pl_hostname , colour=pl_discmethod)+
   labs(y = "Hostname", x = "Orbital Period (Earth Days)")+
   geom_point()+scale_x_continuous(labels = label_comma(),trans = 'log10')-> resulting_plot
+resulting_plot
 
 resulting_plot + transition_time(pl_orbper) + shadow_mark() -> result2
 animate(result2)
