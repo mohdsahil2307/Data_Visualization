@@ -2,7 +2,9 @@
 title: "Kepler Dataset Exploration"
 author: "Sahil Mohammad"
 date: "2022-11-25"
-output: html_document
+output: 
+html_document:
+  fig_caption: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -10,33 +12,96 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 library(tidyverse)
 library(ggplot2)
 library(hrbrthemes)
+library(scales)
+library(gganimate)
+library(gifski)
+library(png)
+library(transformr)
 ```
 
-## R Markdown
-
-```{r}
+```{r echo=FALSE}
 planets <- readr::read_csv("data/planets.csv")
-planets
 
 #temp <- readr::read_csv("https://data.world/markmarkoh/kepler-confirmed-planets/workspace/file?filename=planets.csv")
 #temp Tried reading csv directly from url but this returns only 7 records, Hence I use the downloaded file directly.
 
 ```
 
-```{r}
+
+```{r echo=FALSE, out.width = "100%", out.width = "100%", fig.cap = "Kepler Space Telescope"}
+knitr::include_graphics("data/Kepler_mission.jpg")
+```
+
+
+
+```{r fig.height=10 , fig.width=30}
 # This plot gets the planets with shortest year !
+
 planets |>
   arrange(pl_orbper)|>
   slice(1:30)|>
   ggplot()+
   aes(x=pl_orbper*24,y=pl_hostname , colour=pl_discmethod)+
   labs(y = "Hostname", x = "Orbital Period (Earth Hours)")+
-  geom_point(size=5)+
+  geom_point(size=4)+
   scale_fill_ipsum() +
-  theme_ft_rc(14)
+  theme_ft_rc(14) +
+  theme(axis.title.x = element_text(size = 20, hjust = 0.5),axis.title.y = element_text(size = 20, hjust = 0.5)) +
+  scale_x_continuous(labels = label_comma(),trans = 'log10')->plot1
+
+plot1.animation = plot1 + 
+transition_time(pl_orbper) + shadow_mark()
+#plot1.animation
+animate(plot1.animation,width =700,fps=25, end_pause = 50)
+
+
 ```
 
+```{r}
 
+planets |>
+  arrange(pl_orbper)|>
+  slice(1:30)|>
+  group_by(pl_discmethod)|>
+  ggplot()+
+  aes(x=pl_orbper*24,y=pl_hostname)+
+  labs(y = "Hostname", x = "Orbital Period (Earth Hours)")+
+  geom_point(size=3)+
+  scale_fill_ipsum() +
+  theme_ft_rc(14)->plot2
+plot2
+
+
+#plot2.animation = plot2 + 
+#  transition_time(pl_orbper*24)
+#plot2.animation
+#animate(plot1.animation , fps = 120, duration = 10)
+
+
+planets |>
+  ggplot()+
+  aes(x= st_teff , y = st_dist, color = pl_discmethod)+
+  labs(y = "Distance", x = "Temperature")+
+  geom_point()+
+  scale_y_continuous(labels = label_comma(),trans = 'log10')
+
+planets |>
+  ggplot()+
+  aes(x= pl_orbper*24 , y = pl_bmassj, color = pl_discmethod)+
+  labs(y = "Mass", x = "Period")+
+  geom_point()+
+  scale_color_viridis_d() +
+  scale_y_continuous(labels = label_comma(),trans = 'log10')+
+  scale_x_continuous(labels = label_comma(),trans = 'log10') -> plot_test
+
+test_animation = plot_test + transition_time(disc_year)
+  
+animate(test_animation)
+
+
+
+
+```
 
 ```{r}
 #Show the temperatures of planets with shortest year
@@ -56,8 +121,8 @@ planets |>
   ggplot()+
   aes(x=pl_orbper,y=pl_hostname , colour=pl_discmethod)+
   labs(y = "Hostname", x = "Orbital Period (Earth Days)")+
-  geom_point() -> resulting_plot
+  geom_point()+scale_x_continuous(labels = label_comma(),trans = 'log10')-> resulting_plot
 
-library(scales)
-resulting_plot + scale_x_continuous(labels = label_comma(),trans = 'log10')
+resulting_plot + transition_time(pl_orbper) + shadow_mark() -> result2
+animate(result2)
 ```
